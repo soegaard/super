@@ -1,6 +1,6 @@
 #lang racket
-(provide (except-out (all-from-out racket)
-                     #%top #%app))
+(provide (except-out (all-from-out racket) #%top #%app)
+         #%ref)
 
 ;;;
 ;;; Field and Method Access, Method Calls
@@ -224,4 +224,19 @@
      (syntax/loc stx
        (e arg ...))]))
 
+;;;
+;;; (#%ref x index) 
+;;;
 
+(define-syntax (#%ref stx)
+  (syntax-parse stx 
+    [(#%ref x:id index:expr)
+     (syntax/loc stx
+       (let ([i index])
+         (cond
+           [(vector? x) (vector-ref x i)]
+           [(list?   x) (list-ref   x i)]
+           [(string? x) (string-ref x i)]
+           [(bytes?  x) (bytes-ref  x i)]
+           [else
+            (error '#%ref (~a "expected a vector, list, string or byte string, got: " x))])))]))

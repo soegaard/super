@@ -1,4 +1,4 @@
-#lang super
+#lang super racket
 
 (define point% 
   (class* object% (printable<%>)
@@ -46,10 +46,10 @@ p2.x
 
 ;; 5. (o.m a ...)               invoke method m on object o wth arguments a... 
 
-(require racket/class)
-
 (p.move-x 20) 
 (p.move-x 20 .move-y 4)
+
+; same as 
 (p .move-x 20 .move-y 4)
 
 
