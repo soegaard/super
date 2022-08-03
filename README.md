@@ -18,17 +18,17 @@ where <lang> is the name of an language like racket, racket or similar.
 In a super language identifiers with dots can be used for field access
 and for method calls.
 
-1. o.f                       access field f of object o
-
-2. o.f1.f2                   access field f2 of object o.f1
-
-3. (o .m a ...)              invoke method m on object o wth arguments a...
-
-4. (o .m1 a1 ... .m2 a2 ...) same as ((o .m1 a1 ...) .m2 a2 ...)
-
-5. (o.m a ...)               invoke method m on object o wth arguments a... 
-
-6. (o.m a ... .m1 a1 ...)    invoke method m1 on resultof object (o.m a ...) with arguments a2 ... 
+    1. o.f                       access field f of object o
+    
+    2. o.f1.f2                   access field f2 of object o.f1
+    
+    3. (o .m a ...)              invoke method m on object o wth arguments a...
+    
+    4. (o .m1 a1 ... .m2 a2 ...) same as ((o .m1 a1 ...) .m2 a2 ...)
+    
+    5. (o.m a ...)               invoke method m on object o wth arguments a... 
+    
+    6. (o.m a ... .m1 a1 ...)    invoke method m1 on resultof object (o.m a ...) with arguments a2 ... 
 
 
 ## Indexing with square brackets
