@@ -30,6 +30,7 @@ and for method calls.
     
     6. (o.m a ... .m1 a1 ...)    invoke method m1 on resultof object (o.m a ...) with arguments a2 ... 
 
+See `test-object-notation.rkt` for an example.
 
 ## Indexing with square brackets
 
@@ -58,3 +59,5 @@ The default bindings is defined like this:
                [(bytes?  x) (bytes-ref  x i)]
                [else
                 (error '#%ref (~a "expected a vector, list, string or byte string, got: " x))])))]))
+
+See `test-ref-expressions.rkt` for an example.
