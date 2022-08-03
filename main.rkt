@@ -1,6 +1,6 @@
 #lang racket
 (provide (except-out (all-from-out racket)
-                     #%top))
+                     #%top #%app))
 
 ;;;
 ;;; Field and Method Access, Method Calls
@@ -15,7 +15,7 @@
 ;; 3. (o .m a ...)              invoke method m on object o wth arguments a...
 ;; 4. (o .m1 a1 ... .m2 a2 ...) same as ((o .m1 a1 ...) .m2 a2 ...)
 ;; 5. (o.m a ...)               invoke method m on object o wth arguments a... 
-
+;; 6. (o.m a ... .m1 a1 ...)    invoke method m1 on resultof object (o.m a ...) with arguments a2 ... 
 
 
 ;; Ad 1. and 3.
@@ -33,7 +33,7 @@
 ;; We are going to define our own versions of #%app and #%top named .app and .top.
 ;; We will export them under the names #%app and #%top.
 
-;(provide (rename-out [.app #%app]))
+(provide (rename-out [.app #%app]))
 (provide (rename-out [.top #%top]))
 
 
@@ -95,7 +95,8 @@
     (datum->syntax id sym id id))
 
 
-  (define (identifers->dotted-name id ids)
+  (define (identifiers->dotted-name id ids)
+    (when (syntax? ids) (set! ids (syntax->list ids)))
     (identifier-append* id id (add-between ids #'|.|)))
 
   (define (dotted-identifier->identifiers id)
@@ -112,8 +113,9 @@
              #:when (not (identifier-contains? #'name "."))))
 
   (define-syntax-class method ; an identifier that begins with a dot
-    (pattern name:id
-             #:when (identifier-begins-with? #'name #\.)))
+    (pattern dot-name:id
+             #:when (identifier-begins-with? #'dot-name #\.)
+             #:attr name (identifier-drop-start #'dot-name)))
 
   (define-syntax-class non-method
     (pattern (~not expr:method)))
@@ -166,9 +168,60 @@
                                             (syntax/loc #'id
                                               (get-field f o)))
                                           #'fs)]))
-                      (loop #'o #'fs)])])]        
+                      (loop #'o #'fs)])])]
     [(_.top . id)
      ; better safe than sorry
      #'(#%top . id)]))
+
+;;;
+;;; #%app
+;;;
+
+;; 3. (o .m a ...)              invoke method m on object o wth arguments a...
+;; 4. (o .m1 a1 ... .m2 a2 ...) same as ((o .m1 a1 ...) .m2 a2 ...)
+;; 5. (o.m a ...)               invoke method m on object o with arguments a... 
+;; 6. (o.m a ... .m1 a1 ...)    invoke method m1 on resultof object (o.m a ...) with arguments a2 ... 
+
+(define-syntax (.app stx)
+  (syntax-parse stx
+    ; 5. (o.m a ...)
+    [(_.app id:dotted-name arg:non-method ...)
+     (define (-> x) (string->identifier #'id #'id x))
+     (with-syntax ([(o f ... m) (stx-map -> #'id.names)])
+       (with-syntax ([o.fs (identifiers->dotted-name #'id #'(o f ...))])
+         (syntax/loc stx
+           (let ([obj o.fs]
+                 [args (list arg ...)]) ; don't duplicate arg ...
+             (cond
+               [(and (object? obj) (method-in-interface? 'm (object-interface obj)))
+                (send/apply o m args)]
+               [(and (object? obj) (field-bound? m obj))
+                (apply (get-field m obj) args)]
+               [(object? obj)
+                (raise-syntax-error
+                 '.app (~a "the object does not not have a field or method named: " 'm) #'id)]
+               [else
+                (raise-syntax-error
+                 '.app (~a "expected an object, got: " obj) #'id)])))))]
+    ; 6. (o.m a ... .m1 a1 ...)
+    [(_.app id:dotted-name a:non-method ... m1:method . more)
+     (syntax/loc stx
+       (let ([obj (.app id a ...)])
+         (send obj m1.name . more)))]
+    ; (e .m a ...)
+    [(_.app e:expr method:method arg:non-method ...)
+     (syntax/loc stx
+       (let ([o e])
+         (send o method.name arg ...)))]
+    ; (e .m a ... .m2 a2 ...)
+    [(_.app e:expr method:method arg:non-method ... method2:method . more)
+     (syntax/loc stx
+       (let ((o e))
+         (let ([o1 (send o method.name arg ...)])
+           (.app o1 method2 . more))))]
+    ; (e a ...)
+    [(_.app e:expr arg:non-method ...)
+     (syntax/loc stx
+       (e arg ...))]))
 
 
