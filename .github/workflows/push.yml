@@ -3,7 +3,7 @@ on:
   - pull_request
 
 jobs:
-  build_and_publish_docs:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
