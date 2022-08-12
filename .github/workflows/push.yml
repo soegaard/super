@@ -13,7 +13,7 @@ jobs:
         with:
           architecture: 'x64'
           distribution: 'full'
-	  variant: 'CS'
+          variant: 'CS'
           version: '8.5'
           dest: '"${HOME}/racketdist"'
           local_catalogs: $GITHUB_WORKSPACE
