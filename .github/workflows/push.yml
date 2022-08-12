@@ -7,19 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@master
       - name: Install Racket
-        uses: Bogdanp/setup-racket@v1.3.1
+        uses: Bogdanp/setup-racket@v1.8.1
         with:
           architecture: 'x64'
           distribution: 'full'
-          version: '8.1'
+	  variant: 'CS'
+          version: '8.5'
           dest: '"${HOME}/racketdist"'
           local_catalogs: $GITHUB_WORKSPACE
           sudo: never
       - name: Register local packages
         run: |
-          raco pkg install -i --auto --no-setup --skip-installed super
-          raco pkg update  --auto --no-setup super
+          raco pkg install --auto super
       - name: Setup Collections
         run: raco setup --check-pkg-deps super
