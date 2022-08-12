@@ -20,7 +20,6 @@ jobs:
           sudo: never
       - name: Register local packages
         run: |
-          raco pkg install -i --auto --no-setup --skip-installed super
-          raco pkg update     --auto --no-setup super
+          raco pkg install --name super
       - name: Setup Collections
         run: raco setup --check-pkg-deps super
