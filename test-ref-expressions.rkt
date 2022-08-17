@@ -10,4 +10,12 @@ l[1]
 s[1]
 b[1]
 
+(define Array (class object%
+                (init-field elements)
+                (super-new)
+                #;(define/public (subscript-get i)
+                  (vector-ref elements i))))
 
+(define an-array (new Array [elements #(a b c d e)]))
+
+an-array[2]

@@ -228,6 +228,30 @@
 ;;; (#%ref x index) 
 ;;;
 
+
+(define (object-ref x i)
+  (with-handlers ([exn:fail:object? rewrite-object-ref-exception])
+    (send x subscript-get i)))
+
+(define (rewrite-object-ref-exception exn)
+  ; The original message currently looks like:
+  ;     "send: no such method\n  method name: subscript-get\n  class name: Array"
+  (define msg      (exn-message exn))
+  (define marks    (exn-continuation-marks exn))
+  (define rewrite? (and (string-prefix? msg "send") (string-contains? msg "subscript-get")))
+  (define new-msg  (or (and rewrite? "#%ref: object is not subscriptable\n  class name: Array") msg))
+  (raise (exn:fail:object new-msg marks)))
+
+(define (default-ref value index)
+  (define x value)
+  (define i index)
+  (cond
+    [(list?   x) (list-ref   x i)]
+    [(bytes?  x) (bytes-ref  x i)]
+    [(object? x) (object-ref x i)]
+    [else
+     (error '#%ref (~a "expected a vector, list, string or byte string, got: " x))]))
+  
 (define-syntax (#%ref stx)
   (syntax-parse stx 
     [(#%ref x:id index:expr)
@@ -235,8 +259,5 @@
        (let ([i index])
          (cond
            [(vector? x) (vector-ref x i)]
-           [(list?   x) (list-ref   x i)]
            [(string? x) (string-ref x i)]
-           [(bytes?  x) (bytes-ref  x i)]
-           [else
-            (error '#%ref (~a "expected a vector, list, string or byte string, got: " x))])))]))
+           [else        (default-ref x i)])))]))
